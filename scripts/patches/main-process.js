@@ -362,9 +362,13 @@ function applyLinuxExplicitTrayQuitPatch(currentSource) {
   const trayQuitNeedle = "{label:rB(this.appName),click:()=>{n.app.quit()}}";
   const trayQuitPatch =
     `{label:rB(this.appName),click:()=>{${quitMarkerExpression}n.app.quit()}}`;
+  const patchedTrayQuitRegex =
+    /\{label:[^{}]+,click:\(\)=>\{typeof codexLinuxPrepareForExplicitQuit===`function`\?codexLinuxPrepareForExplicitQuit\(\):typeof codexLinuxMarkQuitInProgress===`function`&&codexLinuxMarkQuitInProgress\(\),[A-Za-z_$][\w$]*\.app\.quit\(\)\}\}/;
   const trayQuitRegex =
     /\{label:rB\(([^)]+)\),click:\(\)=>\{([A-Za-z_$][\w$]*)\.app\.quit\(\)\}\}/;
-  if (patchedSource.includes(trayQuitPatch)) {
+  const genericTrayQuitRegex =
+    /\{label:([A-Za-z_$][\w$]*\(this\.appName\)),click:\(\)=>\{([A-Za-z_$][\w$]*)\.app\.quit\(\)\}\}/;
+  if (patchedSource.includes(trayQuitPatch) || patchedTrayQuitRegex.test(patchedSource)) {
     // Already patched.
   } else if (patchedSource.includes(trayQuitNeedle)) {
     patchedSource = patchedSource.replace(trayQuitNeedle, trayQuitPatch);
@@ -373,6 +377,12 @@ function applyLinuxExplicitTrayQuitPatch(currentSource) {
       trayQuitRegex,
       (_match, appNameExpr, electronVar) =>
         `{label:rB(${appNameExpr}),click:()=>{${quitMarkerExpression}${electronVar}.app.quit()}}`,
+    );
+  } else if (genericTrayQuitRegex.test(patchedSource)) {
+    patchedSource = patchedSource.replace(
+      genericTrayQuitRegex,
+      (_match, labelExpression, electronVar) =>
+        `{label:${labelExpression},click:()=>{${quitMarkerExpression}${electronVar}.app.quit()}}`,
     );
   } else if (
     patchedSource.includes("getNativeTrayMenuItems(){") &&
