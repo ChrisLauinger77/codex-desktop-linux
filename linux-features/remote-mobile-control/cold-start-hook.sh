@@ -104,7 +104,8 @@ run_with_timeout() {
         timeout "$timeout_seconds" "$0" --run-main || \
             echo "Remote mobile control hook timed out or failed after ${timeout_seconds}s"
     else
-        remote_mobile_control_main
+        echo "Remote mobile control hook running without timeout; continuing best-effort in the background"
+        remote_mobile_control_main &
     fi
 }
 

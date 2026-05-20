@@ -70,7 +70,8 @@ runner. When the system `timeout` command is available, the installer/start path
 is capped by
 `CODEX_REMOTE_CONTROL_DAEMON_AUTOSTART_TIMEOUT_SECONDS` (default `30`), so
 Desktop cold start is not blocked by network, GitHub, or installer stalls.
-Hook output is written to the launcher cache as `remote-mobile-control.log`.
+When `timeout` is unavailable, the hook continues the installer/start path in a
+background subprocess. Hook output is written to the launcher log.
 
 On NixOS, prefer the flake's Home Manager module instead of the launcher hook:
 

@@ -1799,6 +1799,7 @@ test_launcher_template_sanity() {
     assert_contains "$REPO_DIR/linux-features/remote-mobile-control/cold-start-hook.sh" "remote-control start"
     assert_contains "$REPO_DIR/linux-features/remote-mobile-control/cold-start-hook.sh" "/run/current-system/sw/bin"
     assert_contains "$REPO_DIR/linux-features/remote-mobile-control/cold-start-hook.sh" "codex-remote-control.service"
+    assert_contains "$REPO_DIR/linux-features/remote-mobile-control/cold-start-hook.sh" "continuing best-effort in the background"
     assert_contains "$REPO_DIR/flake.nix" "homeManagerModules"
     assert_contains "$REPO_DIR/flake.nix" "nixosModules"
     assert_contains "$REPO_DIR/nix/home-manager-module.nix" "codex-remote-control"
