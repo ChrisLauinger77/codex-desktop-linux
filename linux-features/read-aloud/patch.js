@@ -273,13 +273,21 @@ function applyGeneralSettingsExportPatch(source) {
 }
 
 function applyGeneralSettingsWrapperPatch(source) {
-  if (!source.includes("GeneralSettings") || !source.includes("general-settings-") || source.includes("ReadAloudSettings")) {
+  if (!source.includes("GeneralSettings") || !source.includes("general-settings-")) {
     return source;
   }
+  const wrapperSource = (generalAlias, innerAsset) =>
+    `import{r as ${generalAlias}}from"${innerAsset}";export{${generalAlias} as GeneralSettings,${generalAlias} as ReadAloudSettings};`;
+  const brokenWrapperPattern =
+    /import\{r as ([A-Za-z_$][\w$]*),ReadAloudSettings as ([A-Za-z_$][\w$]*)\}from"(\.\/general-settings-[^"]+\.js)";export\{\1 as GeneralSettings,\2 as ReadAloudSettings\};/;
+  if (brokenWrapperPattern.test(source)) {
+    return source.replace(brokenWrapperPattern, (_match, generalAlias, _readAloudAlias, innerAsset) =>
+      wrapperSource(generalAlias, innerAsset),
+    );
+  }
   return source.replace(
-    /import\{r as ([A-Za-z_$][\w$]*)\}from"(\.\/general-settings-[^"]+\.js)";export\{\1 as GeneralSettings\};/,
-    (_match, generalAlias, innerAsset) =>
-      `import{r as ${generalAlias},ReadAloudSettings as t}from"${innerAsset}";export{${generalAlias} as GeneralSettings,t as ReadAloudSettings};`,
+    /import\{r as ([A-Za-z_$][\w$]*)\}from"(\.\/general-settings-[^"]+\.js)";export\{\1 as GeneralSettings(?:,\1 as ReadAloudSettings)?\};/,
+    (_match, generalAlias, innerAsset) => wrapperSource(generalAlias, innerAsset),
   );
 }
 

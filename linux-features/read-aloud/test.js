@@ -832,8 +832,18 @@ test("general settings patch exports a dedicated read aloud settings page", () =
 test("general settings wrapper re-exports the read aloud settings page", () => {
   const source = 'import{r as e}from"./general-settings-Bvwhh0-i.js";export{e as GeneralSettings};';
   const patched = twice(applyGeneralSettingsWrapperPatch, source);
-  assert.match(patched, /ReadAloudSettings as t/);
-  assert.match(patched, /t as ReadAloudSettings/);
+  assert.match(patched, /import\{r as e\}from"\.\/general-settings-Bvwhh0-i\.js"/);
+  assert.match(patched, /export\{e as GeneralSettings,e as ReadAloudSettings\}/);
+  assert.doesNotMatch(patched, /ReadAloudSettings as t/);
+});
+
+test("general settings wrapper removes a stale read aloud import", () => {
+  const source =
+    'import{r as e,ReadAloudSettings as t}from"./general-settings-CV9Safs7.js";export{e as GeneralSettings,t as ReadAloudSettings};';
+  const patched = twice(applyGeneralSettingsWrapperPatch, source);
+  assert.match(patched, /import\{r as e\}from"\.\/general-settings-CV9Safs7\.js"/);
+  assert.match(patched, /export\{e as GeneralSettings,e as ReadAloudSettings\}/);
+  assert.doesNotMatch(patched, /ReadAloudSettings as t/);
 });
 
 test("settings nav patches add a visible read aloud section after computer use", () => {
@@ -1044,6 +1054,10 @@ test("settings asset patch creates a first-class read aloud settings section", (
     assert.match(
       fs.readFileSync(path.join(assets, "app-main-current.js"), "utf8"),
       /default:e\.ReadAloudSettings/,
+    );
+    assert.match(
+      fs.readFileSync(path.join(assets, "general-settings-wrapper.js"), "utf8"),
+      /export\{e as GeneralSettings,e as ReadAloudSettings\}/,
     );
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
