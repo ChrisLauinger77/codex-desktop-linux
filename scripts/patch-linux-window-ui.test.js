@@ -4035,6 +4035,8 @@ test("keeps Linux desktop toggles visible with native Keyboard Shortcuts", () =>
     assert.match(linuxDesktopSource, /"Generated":\[\{key:"refresh"/);
     assert.match(linuxDesktopSource, /"Metadata file":\[\{key:"details"/);
     assert.match(linuxDesktopSource, /control:null/);
+    assert.match(linuxDesktopSource, /cursor-pointer/);
+    assert.match(linuxDesktopSource, /disabled:cursor-not-allowed/);
     assert.doesNotMatch(
       linuxDesktopSource,
       /control:\$\.jsxs\("div",\{className:"flex flex-wrap items-center justify-end gap-2"/,
