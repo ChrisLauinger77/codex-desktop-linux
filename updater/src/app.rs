@@ -11,7 +11,6 @@ use crate::{
 };
 use anyhow::{Context, Result};
 use chrono::{Duration as ChronoDuration, Utc};
-use reqwest::Client;
 use serde::Deserialize;
 use std::{
     ffi::OsString,
@@ -934,7 +933,7 @@ async fn run_check_cycle(
         return Ok(());
     };
 
-    let client = Client::builder().build()?;
+    let client = upstream::http_client()?;
 
     sync_runtime_state(config, state);
     state.status = UpdateStatus::CheckingUpstream;
@@ -2335,7 +2334,9 @@ mod tests {
         let mut state = PersistedState::new(true);
         run_check_cycle(&config, &mut state, &paths).await?;
 
-        let expected_dmg_path = config.workspace_root.join("downloads/Codex.dmg");
+        let expected_dmg_path = config
+            .workspace_root
+            .join(format!("downloads/Codex-{sha256}.dmg"));
         assert_eq!(state.status, UpdateStatus::Idle);
         assert_eq!(state.candidate_version, None);
         assert_eq!(state.dmg_sha256.as_deref(), Some(sha256));

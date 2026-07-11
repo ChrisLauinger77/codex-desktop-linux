@@ -31,6 +31,11 @@ early. Set `CODEX_KEEP_REJECTED_CANDIDATE=1` to retain a rejected candidate for
 debugging. `CODEX_ACCEPTANCE_OVERRIDE=1` is a developer-only emergency escape
 hatch for a completely built candidate; CI and the updater do not set it.
 
+The updater also publishes downloads to immutable, content-addressed paths
+after a streamed hash, file sync, atomic rename, and parent-directory sync.
+This protects the acceptance input itself from interrupted or concurrent
+daemon and wrapper downloads.
+
 ## Drift Issue Lifecycle
 
 Scheduled runs use the DMG SHA-256 as the identity and the app version only as

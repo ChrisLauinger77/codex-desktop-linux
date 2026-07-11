@@ -96,7 +96,7 @@ transactional_install() {
     mkdir -p "$final_parent"
     candidate_dir="$final_parent/.${final_name}.candidate-$$"
     assert_distinct_candidate_paths "$candidate_dir" "$final_dir"
-    rm -rf "$candidate_dir"
+    remove_tree_safely "$candidate_dir"
 
     report_dir="$(transaction_report_dir)"
     mkdir -p "$report_dir"
@@ -170,7 +170,7 @@ transactional_install() {
             warn "CODEX_ACCEPTANCE_OVERRIDE=1 set; promoting a candidate with verdict $verdict"
         else
             if [ "${CODEX_KEEP_REJECTED_CANDIDATE:-0}" != "1" ]; then
-                rm -rf "$candidate_dir"
+                remove_tree_safely "$candidate_dir"
             else
                 warn "Rejected candidate retained for diagnostics: $candidate_dir"
             fi

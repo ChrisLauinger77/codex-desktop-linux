@@ -140,6 +140,12 @@ rebuild uses the shared [upstream DMG acceptance profile](upstream-dmg-acceptanc
 rejected and inconclusive candidates never replace the working generated app
 or advance to package installation.
 
+Updater downloads are streamed to unique temporary files and published as
+`Codex-<sha256>.dmg` only after the file and parent directory are synced. The
+content-addressed path stays immutable while daemon and wrapper rebuild flows
+consume it, so concurrent checks cannot truncate or replace another build's
+DMG input.
+
 ## Service Controls
 
 ```bash

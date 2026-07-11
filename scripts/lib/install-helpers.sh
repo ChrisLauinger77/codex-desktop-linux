@@ -29,8 +29,17 @@ Or install manually:
 EOF
 }
 
+remove_tree_safely() {
+    local path="$1"
+    [ -e "$path" ] || [ -L "$path" ] || return 0
+    # Sources copied from immutable stores can preserve read-only directory
+    # modes. Make only the local copy writable before removing it.
+    chmod -R u+w "$path" 2>/dev/null || true
+    rm -rf -- "$path"
+}
+
 cleanup() {
-    rm -rf "$WORK_DIR"
+    remove_tree_safely "$WORK_DIR"
 }
 trap cleanup EXIT
 trap 'error "Failed at line $LINENO (exit code $?)"' ERR

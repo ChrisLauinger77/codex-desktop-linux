@@ -2466,8 +2466,25 @@ test_candidate_install_is_transactional() {
 
 test_transactional_install_reenters_with_current_bash() {
     info "Checking transactional install re-entry uses the active Bash binary"
-    assert_contains "$REPO_DIR/install.sh" '"$BASH" "$SCRIPT_DIR/install.sh" "${original_args[@]}"'
-    assert_contains "$REPO_DIR/install.sh" '"$BASH" "$SCRIPT_DIR/install.sh" --inspect'
+    assert_contains "$REPO_DIR/install.sh" '"\$BASH" "\$SCRIPT_DIR/install.sh" "\${original_args\[@\]}"'
+    assert_contains "$REPO_DIR/install.sh" '"\$BASH" "\$SCRIPT_DIR/install.sh" --inspect'
+}
+
+test_installer_cleanup_handles_readonly_trees() {
+    info "Checking installer cleanup handles immutable-source directory modes"
+    local workspace="$TMP_DIR/readonly-installer-cleanup"
+    local work_dir="$workspace/work"
+    mkdir -p "$work_dir/runtime/lib"
+    printf '%s\n' "runtime" >"$work_dir/runtime/lib/node"
+    chmod 0555 "$work_dir" "$work_dir/runtime" "$work_dir/runtime/lib"
+    (
+        WORK_DIR="$work_dir"
+        # shellcheck source=scripts/lib/install-helpers.sh
+        . "$REPO_DIR/scripts/lib/install-helpers.sh"
+        cleanup
+        trap - EXIT ERR
+    )
+    [ ! -e "$work_dir" ] || fail "Expected cleanup to remove a read-only copied tree"
 }
 
 test_native_shortcut_targets_compose_existing_flows() {
@@ -8598,6 +8615,7 @@ main() {
     test_rebuild_candidate_uses_validated_default_dmg
     test_candidate_install_is_transactional
     test_transactional_install_reenters_with_current_bash
+    test_installer_cleanup_handles_readonly_trees
     test_native_shortcut_targets_compose_existing_flows
     test_fedora_dependency_bootstrap_installs_rpmbuild
     test_fedora_atomic_rpm_ostree_target_detection

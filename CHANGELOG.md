@@ -30,6 +30,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   the app server reports no active runtime. This clears stale stream ownership
   before the next message instead of leaving the renderer in a repeated thread
   history refresh path.
+- Updater DMG downloads now publish crash-durable, content-addressed files only
+  after a complete streamed download. Concurrent daemon and wrapper rebuilds
+  cannot truncate or replace each other's input, and DMG hashing stays bounded
+  in memory in both the updater and acceptance engine.
 - Linux settings search no longer shows unavailable macOS Dock icon controls or
   Suggested prompts results that do not render in the generated Linux settings
   page.

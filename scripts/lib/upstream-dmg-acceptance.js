@@ -11,8 +11,18 @@ const { UPSTREAM_DMG_RELEASE_PROFILE } = require("./upstream-dmg-release-profile
 
 function sha256File(filePath) {
   const hash = crypto.createHash("sha256");
-  hash.update(fs.readFileSync(filePath));
-  return hash.digest("hex");
+  const file = fs.openSync(filePath, "r");
+  const buffer = Buffer.allocUnsafe(1024 * 1024);
+  try {
+    for (;;) {
+      const bytesRead = fs.readSync(file, buffer, 0, buffer.length, null);
+      if (bytesRead === 0) break;
+      hash.update(buffer.subarray(0, bytesRead));
+    }
+    return hash.digest("hex");
+  } finally {
+    fs.closeSync(file);
+  }
 }
 
 function readJsonIfPresent(filePath) {
