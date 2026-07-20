@@ -44,6 +44,7 @@ const {
 const {
   keybindsSettingsAsset,
   linuxDesktopSettingsAsset,
+  applyLinuxDesktopSettingsIconPatch,
   applyLinuxDesktopSettingsIndexPatch,
   applyLinuxShortcutPhysicalKeyFallbackPatch,
   applyLinuxDesktopSettingsSectionsPatch,
@@ -1703,16 +1704,20 @@ function createSplitRouteNativeKeyboardShortcutsSettingsFixture({
     ].join(""),
   );
   // The icon/navigation bundle: no lazy route map lives here, only the slug -> icon
-  // component map plus the order, group, visibility, and loading metadata.
+  // order, group, visibility, and loading metadata. The icon map has moved into
+  // the visible-sections module in the current upstream bundle.
   writeAsset(
     "settings-page-A.js",
     [
-      'var Hn={"general-settings":wt,"keyboard-shortcuts":xn};',
       "var Wn=[`general-settings`,`import`,`profile`,`keyboard-shortcuts`];",
       "var Qn=[{key:`app`,slugs:[`general-settings`,`import`,`profile`,`keyboard-shortcuts`]}];",
       "function visible(e){switch(e.slug){case`general-settings`:case`agent`:case`personalization`:return!0;case`keyboard-shortcuts`:return!0}}",
       "function loading(H){let W=!1;if(H)bb0:switch(H.slug){case`appearance`:case`general-settings`:case`agent`:case`git-settings`:case`data-controls`:case`personalization`:W=!1;break bb0;case`keyboard-shortcuts`:W=!1;break bb0}return W}",
     ].join(""),
+  );
+  writeAsset(
+    "use-visible-settings-sections-A.js",
+    'var Hn={"general-settings":wt,import:it,profile:pt,"keyboard-shortcuts":xn};export{Hn};',
   );
   // The hoisted async route map is assigned inside an IIFE body.
   writeAsset(
@@ -6153,6 +6158,10 @@ test("adds Linux desktop settings when native shortcuts use a consolidated setti
     assert.doesNotMatch(linuxDesktopSource, /function LinuxSwitch/);
 
     const settingsPageSource = fs.readFileSync(path.join(assetsDir, "settings-page-A.js"), "utf8");
+    assert.match(
+      settingsPageSource,
+      /Hn=\{"linux-desktop":wt,"general-settings":wt,"keyboard-shortcuts":xn\}/,
+    );
     const linuxDesktopDigest = crypto
       .createHash("sha256")
       .update(linuxDesktopSource)
@@ -6230,6 +6239,15 @@ test("adds Linux desktop settings when the lazy route map is hoisted into a sepa
     assert.doesNotMatch(settingsPageSource, /codexLinuxDesktopSettings/);
     assert.match(settingsPageSource, /=\[`general-settings`,`linux-desktop`,`import`,`profile`/);
     assert.match(settingsPageSource, /slugs:\[`general-settings`,`linux-desktop`,`import`,`profile`/);
+
+    const visibleSectionsSource = fs.readFileSync(
+      path.join(assetsDir, "use-visible-settings-sections-A.js"),
+      "utf8",
+    );
+    assert.match(
+      visibleSectionsSource,
+      /Hn=\{"linux-desktop":wt,"general-settings":wt,import:it,profile:pt,"keyboard-shortcuts":xn\}/,
+    );
 
     // The lazy route is registered in the hoisted app chunk, reusing the bundle's
     // own lazy/preload aliases against the bare (no `var`) map assignment.
@@ -6312,6 +6330,18 @@ test("finds Linux desktop settings route map in hashed settings-page chunks", ()
   } finally {
     fs.rmSync(extractedDir, { recursive: true, force: true });
   }
+});
+
+test("adds the Linux desktop icon to the current split settings icon map", () => {
+  const source =
+    'var Z={"general-settings":N,import:ye,profile:ze,"keyboard-shortcuts":X,appearance:b};';
+
+  const patched = applyPatchTwice(applyLinuxDesktopSettingsIconPatch, source);
+
+  assert.equal(
+    patched,
+    'var Z={"linux-desktop":N,"general-settings":N,import:ye,profile:ze,"keyboard-shortcuts":X,appearance:b};',
+  );
 });
 
 test("adds Linux desktop section to current native Keyboard Shortcuts sections bundle", () => {
